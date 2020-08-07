@@ -12,33 +12,51 @@
 #include "simAVRHeader.h"
 #endif
 
+enum States {start, lightOn, lightOff } state;
+
+void tick() {
+   unsigned char button= PINA & 0x01;
+   unsigned char led = 0;
+   switch(state){
+      case start:
+      state = lightOn;
+      break;
+      case lightOn:
+      state = button? lightOff:lightOn;
+      break;
+      case lightOff:
+      state = button? lightOn:lightOff;
+      break;
+      default:
+      state = start;
+      break;
+}
+   switch(state){
+      case start:
+      led = 0x01;
+      break;
+      case lightOn:
+      led = 0x01;
+      break;
+      case lightOff:
+      led = 0x02;
+      break;
+   }
+  PORTB = led;
+}
+
+
 int main(void) {
     /* Insert DDR and PORT initializations */
    DDRA=0X00;  PORTA=0XFF;
    DDRB=0XFF;  PORTB=0X00;
 
     /* Insert your solution below */
-   unsigned char button=0;
-   unsigned char led=0;
-   
-   while (1) {
-       button = PINA & 0x01;
-       
-   switch(button){
-      case 0x00:
-      led = 0x01;
-      break;
-   
-     case 0x01:
-      led = 0x02;
-      break;
+   state = start;
 
-   default:
-      button = 0x00;
-      break;
-   
-  }
-   PORTB = led;       
-    }
+   while (1) {
+     tick();
+   }
     return 1;
+   
 }
