@@ -12,48 +12,148 @@
 #include "simAVRHeader.h"
 #endif
 
-enum States {start, buttonReleaseOff,buttonPressOn, buttonReleaseOn, buttonPressOff } state;
+enum States {start, incrementPress, incrementRelease ,waitIncrement, decrementPress, decrementRelease, waitDecrement, resetPress, resetRelease } state;
+
+static unsigned char cntavail;
 
 void tick() {
-   unsigned char button= PINA & 0x01;
-   static unsigned char led;
+   unsigned char button_A0 = PINA & 0x01;
+   unsigned char button_A1 = (PINA & 0x02) >> 1;
    switch(state){
       case start:
-      state = buttonReleaseOff;
+         if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A0){
+            state = incrementPress;
+         }
+         else if(button_A1){
+            state = decrementPress;
+         }
+         else{
+            state = start;
+         }
       break;
-      case buttonReleaseOff:
-      state = button? buttonPressOn:buttonReleaseOff;
+
+      case incrementPress:
+          if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A0 && cntavail==9){
+            state = waitIncrement;
+         }
+         else if(button_A1){
+            state = decrementPress;
+         }
+         else{
+            state = incrementRelease;
+         }
       break;
-      case buttonPressOn:
-      state = button? buttonPressOn:buttonReleaseOn;
+      case incrementRelease:
+         if(!button_A0){
+            state = incrementRelease;
+         }
+         else{
+            state = incrementPress;
+         }
       break;
-      case buttonReleaseOn:
-      state = button? buttonPressOff:buttonReleaseOn;
+
+      case waitIncrement:
+         if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A1){
+            state = decrementPress;
+         }
+         else{
+            state = waitIncrement;
+         }
       break;
-      case buttonPressOff:
-      state = button? buttonPressOff:buttonReleaseOff;
+
+      case decrementPress:
+          if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A1 && cntavail==0){
+            state = waitDecrement;
+         }
+         else if(button_A0){
+            state = incrementPress;
+         }
+         else{
+            state = decrementRelease;
+         }
+      break;
+      case decrementRelease:
+       if(!button_A1){
+            state = decrementRelease;
+         }
+         else{
+            state = decrementPress;
+         }
+      
+      break;
+
+      case waitDecrement:
+         if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A0){
+            state = incrementPress;
+         }
+         else{
+            state = waitDecrement;
+         }
+      break;
+
+      case resetPress:
+         if(button_A0 && button_A1){
+            state = resetPress;
+         }
+         else if(button_A0){
+            state = incrementPress;
+         }
+         else{
+            state = resetRelease;
+         }
+      break;
+      case resetRelease:
+         if(!(button_A0 && button_A1)){
+            state = resetRelease;
+         }
+         else{
+            state = resetPress;
+         }
       break;
       default:
-      state = start;
+         state = start;
       break;
 }
    switch(state){
       case start:
-      led = 0x01;
+         cntavail = 7;
       break;
-      case buttonReleaseOff:
-      led = 0x01;
+      case incrementPress:
+      cntavail = cntavail + 1;
       break;
-      case buttonPressOn:
-      led = 0x02;
+      case incrementRelease:
       break;
-      case buttonReleaseOn:
+      case waitIncrement:
       break;
-      case buttonPressOff:
-      led = 0x01;
+      case decrementPress:
+      cntavail = cntavail - 1;
+      break;
+      case decrementRelease:
+      break;
+      case waitDecrement:
+      break;
+      case resetPress:
+       cntavail = 0;
+      break;
+      case resetRelease:
       break;
    }
-  PORTB = led;
+  PORTC = cntavail;
 }
 
 
@@ -61,6 +161,7 @@ int main(void) {
     /* Insert DDR and PORT initializations */
    DDRA=0X00;  PORTA=0XFF;
    DDRB=0XFF;  PORTB=0X00;
+   DDRC=0XFF;  PORTC=0X00;
 
     /* Insert your solution below */
    state = start;
