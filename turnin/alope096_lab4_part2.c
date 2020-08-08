@@ -12,94 +12,119 @@
 #include "simAVRHeader.h"
 #endif
 
-enum States {start, increment,waitIncrement, decrement, waitDecrement, reset } state;
+enum States {start, incrementPress, incrementRelease ,waitIncrement, decrementPress, decrementRelease, waitDecrement, resetPress, resetRelease } state;
+
+static unsigned char cntavail;
 
 void tick() {
    unsigned char button_A0 = PINA & 0x01;
    unsigned char button_A1 = (PINA & 0x02) >> 1;
-   static unsigned char cntavail;
    switch(state){
       case start:
          if(button_A0 && button_A1){
-            state = reset;
+            state = resetPress;
          }
          else if(button_A0){
-            state = increment;
+            state = incrementPress;
          }
          else if(button_A1){
-            state = decrement;
+            state = decrementPress;
          }
          else{
             state = start;
          }
       break;
 
-      case increment:
-         if(button_A0 && button_A1){
-            state = reset;
+      case incrementPress:
+          if(button_A0 && button_A1){
+            state = resetPress;
          }
          else if(button_A0 && cntavail==9){
             state = waitIncrement;
          }
          else if(button_A1){
-            state = decrement;
+            state = decrementPress;
          }
          else{
-            state = increment;
+            state = incrementRelease;
+         }
+      break;
+      case incrementRelease:
+         if(!button_A0){
+            state = incrementRelease;
+         }
+         else{
+            state = incrementPress;
          }
       break;
 
       case waitIncrement:
          if(button_A0 && button_A1){
-            state = reset;
+            state = resetPress;
          }
          else if(button_A1){
-            state = decrement;
+            state = decrementPress;
          }
          else{
             state = waitIncrement;
          }
       break;
 
-      case decrement:
-         if(button_A0 && button_A1){
-            state = reset;
+      case decrementPress:
+          if(button_A0 && button_A1){
+            state = resetPress;
          }
          else if(button_A1 && cntavail==0){
             state = waitDecrement;
          }
          else if(button_A0){
-            state = increment;
+            state = incrementPress;
          }
          else{
-            state = decrement;
+            state = decrementRelease;
          }
+      break;
+      case decrementRelease:
+       if(!button_A1){
+            state = decrementRelease;
+         }
+         else{
+            state = decrementPress;
+         }
+      
       break;
 
       case waitDecrement:
          if(button_A0 && button_A1){
-            state = reset;
+            state = resetPress;
          }
          else if(button_A0){
-            state = increment;
+            state = incrementPress;
          }
          else{
             state = waitDecrement;
          }
       break;
 
-      case reset:
+      case resetPress:
          if(button_A0 && button_A1){
-            state = reset;
+            state = resetPress;
          }
          else if(button_A0){
-            state = increment;
+            state = incrementPress;
          }
          else{
-            state = reset;
+            state = resetRelease;
          }
       break;
-
+      case resetRelease:
+         if(!(button_A0 && button_A1)){
+            state = resetRelease;
+         }
+         else{
+            state = resetPress;
+         }
+      break;
       default:
          state = start;
       break;
@@ -108,18 +133,24 @@ void tick() {
       case start:
          cntavail = 7;
       break;
-      case increment:
-          cntavail = cntavail + 1;
+      case incrementPress:
+      cntavail = cntavail + 1;
+      break;
+      case incrementRelease:
       break;
       case waitIncrement:
       break;
-      case decrement:
-          cntavail = cntavail - 1;
+      case decrementPress:
+      cntavail = cntavail - 1;
+      break;
+      case decrementRelease:
       break;
       case waitDecrement:
       break;
-      case reset:
-          cntavail = 0;
+      case resetPress:
+       cntavail = 0;
+      break;
+      case resetRelease:
       break;
    }
   PORTC = cntavail;
