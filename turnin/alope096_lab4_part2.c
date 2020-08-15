@@ -72,11 +72,11 @@ void tick() {
       break;
 
       case resetPress:
-         if(!button_A0 && !button_A1){
-            state = startChoose;
+         if((button_A0) && (button_A1)){
+            state = resetPress;
          }
          else{
-            state = resetPress;
+            state = startChoose;
          }
       break;
    
@@ -92,7 +92,11 @@ void tick() {
       break;
       case incrementPress:
       break;
+      case incrementRelease:
+      break;
       case decrementPress:
+      break;
+      case decrementRelease:
       break;
       case resetPress:
         cntavail = 0;
