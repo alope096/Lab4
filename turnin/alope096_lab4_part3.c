@@ -12,7 +12,7 @@
 #include "simAVRHeader.h"
 #endif
 
-enum States {locked, buttonHashPressed, buttonHashrelease, buttonYpress, insideButton} state;
+enum States {locked, buttonHashPressed, buttonHashrelease, buttonYpress,buttonYrelease, insideButton} state;
 
 void tick(){
    unsigned char button_Y = PINA & 0x02;
@@ -25,12 +25,33 @@ void tick(){
          state = button_H? buttonHashPressed : locked;
       break;   
       case buttonHashPressed:
-         state = button_H? buttonHashPressed : buttonHashrelease;
+         if(button_Y){
+           state = buttonYpress;
+         }
+         else if(button_PA7){
+           state = insideButton;
+         }
+         else{
+           state = button_H? buttonHashPressed : buttonHashrelease;
+         }
       break; 
+
       case buttonHashrelease:
          state = button_Y? buttonYpress : buttonHashrelease;
       break;
+
       case buttonYpress:
+          if(button_H){
+           state = buttonHashPressed;
+         }
+         else if(button_PA7){
+           state = insideButton;
+         }
+         else{
+           state = button_Y? buttonYpress : buttonYrelease;
+         }
+      break; 
+      case buttonYrelease:
          state = button_PA7? insideButton : buttonYpress;
       break; 
       case insideButton:
@@ -48,7 +69,9 @@ void tick(){
       break; 
       case buttonHashrelease:
       break; 
-      case buttonYpress:
+      case buttonYpress: 
+      break;
+      case buttonYrelease:
          lockedUnlocked = 0x01; 
       break;
       case insideButton:
