@@ -25,34 +25,62 @@ void tick(){
          state = button_H? buttonHashPressed : locked;
       break;   
       case buttonHashPressed:
-         if(button_Y){
+         if(!button_H){
+           state = buttonHashrelease;
+         }
+         else if(button_Y){
            state = buttonYpress;
          }
          else if(button_PA7){
            state = insideButton;
          }
          else{
-           state = button_H? buttonHashPressed : buttonHashrelease;
+           state = buttonHashPressed;
          }
       break; 
 
       case buttonHashrelease:
-         state = button_Y? buttonYpress : buttonHashrelease;
+         if(button_H){
+           state = buttonHashPressed;
+         }
+         else if(button_Y){
+           state = buttonYpress;
+         }
+         else if(button_PA7){
+           state = insideButton;
+         }
+         else{
+           state = buttonHashrelease;
+         }
       break;
 
       case buttonYpress:
-          if(button_H){
+          if(!button_Y){
+           state = buttonYrelease;
+         }
+         else if(button_H){
            state = buttonHashPressed;
          }
          else if(button_PA7){
            state = insideButton;
          }
          else{
-           state = button_Y? buttonYpress : buttonYrelease;
+           state = buttonYpress;
          }
       break; 
       case buttonYrelease:
-         state = button_PA7? insideButton : buttonYpress;
+         if(button_Y){
+           state = buttonYpress;
+         }
+         else if(button_H){
+           state = buttonHashPressed;
+         }
+         else if(button_PA7){
+           state = insideButton;
+         }
+         else{
+           state = buttonYrelease;
+         }
       break; 
       case insideButton:
          state = locked;
